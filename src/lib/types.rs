@@ -1,13 +1,25 @@
 
-pub trait Worker {
+
+pub trait HasName {
     fn name(&self)->String;
-    fn process<T>(&self, data : T) -> T;
 }
 
-pub enum Message<Data:Send, Impl:Worker>{
-    Nothing,
+pub trait HasTarget {
+    fn target(&self)->Target;
+}
+pub trait Processor {
+    fn process<T>(&self, arg : T) -> T;
+}
+
+pub enum Target {
+    Processor,
+    Consumer,
+}
+
+pub enum Message<T :HasName + HasTarget>{
     Quit,
-    Done(String),
-    Request(String,Data),
-    AddHandler(Impl),
+    Request(T),
+    Response(T),
+    Busy(String),
+    Free(String),
 }

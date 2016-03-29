@@ -1,69 +1,60 @@
 use std::sync::mpsc;
 use std::sync::mpsc::{Sender, Receiver};
-use super::types::{Message, Worker};
+use super::types::{Message, Processor, HasName, HasTarget};
 
-pub struct WorkerHandler<Data:Send, Impl:Worker>
+pub struct WorkerHandler<T:HasName+HasTarget, W:HasName+Processor>
 {
-    name : String,
-    gate : Sender<Message<Data, Impl>>,
-    input : Receiver<Message<Data, Impl>>,
-    output  : Sender<Message<Data, Impl>>,
-    processed : usize,
-    workers : Vec<Impl>,
+    gate : Sender<Message<T>>,
+    input : Receiver<Message<T>>,
+    output  : Sender<Message<T>>,
+    jobs : usize,
+    worker : W,
 }
-impl <Data:Send, Impl:Worker> Drop for WorkerHandler <Data, Impl> {
+
+impl <T:HasName+HasTarget, W:HasName+Processor> Drop for WorkerHandler <T, W> {
     fn drop(&mut self) {
-        trace!("{} dropped. Processed {} tasks.", self.name, self.processed);
+        trace!("{} dropped. Processed {} tasks.", self.worker.name(), self.jobs);
     }
 }
-impl <Data:Send, Impl:Worker> WorkerHandler <Data, Impl> {
-    pub fn new<Name : Into<String>>(name:Name, results:Sender<Message<Data, Impl>>) -> Self {
-        let name = name.into();
-        trace!("{} created.", &name);
+
+impl <T:HasName+HasTarget, W:HasName+Processor> WorkerHandler <T, W> {
+    pub fn new(worker:W, output:Sender<Message<T>>) -> Self {
+        trace!("WorkerHandler::new({}, ...)", &worker.name());
         let (tx, rx)  = mpsc::channel();
-        WorkerHandler {
-            name:name,
-            gate:tx,
-            input:rx,
-            output:results,
-            processed : 0,
-            workers : Vec::new()
-        }
+        WorkerHandler{ gate:tx, input:rx, output:output, jobs:0, worker:worker }
     }
 
-    pub fn gate(&self) -> Sender<Message<Data, Impl>> {
+    pub fn gate(&self) -> Sender<Message<T>> {
         self.gate.clone()
     }
 
+    fn say(&self, msg : Message<T>) -> bool
+    {
+        return self.output.send(msg).is_ok();
+    }
+
     pub fn run(&mut self) {
-        let mut done = false;
         while let Ok(msg) = self.input.recv() {
             match msg {
-                Message::Nothing => {
-                    trace!("{} <= Message::Nothing", self.name);
-                },
                 Message::Quit => {
-                    trace!("{} <= Message::Quit", self.name);
-                    done = true;
+                    trace!("{} <= Message::Quit", self.worker.name());
+                    break;
                 },
-                Message::AddHandler(worker) => {
-                    trace!("{} <= Message::AddHandler({})", self.name, worker.name());
-                    self.workers.push(worker);
-                }
-                Message::Request(target, data) => {
-                    self.processed += 1;
-                    trace!("{} <= Message::Request({}); {}", self.name, target, self.processed);
-                    let mut current = data;
-                    for worker in &self.workers {
-                        current = worker.process(current);
+                Message::Request(request) => {
+                    self.jobs += 1;
+                    let name = request.name();
+                    trace!("{} <= Message::Request({}); {}", self.worker.name(), name, self.jobs);
+                    let ok = self.say(Message::Busy(name.clone())) &&
+                             self.say(Message::Response(self.worker.process(request))) &&
+                             self.say(Message::Free(name.clone()));
+                    if !ok {
+                        break;
                     }
                 }
                 _ => {
-                    panic!("{} has received unexpected command.", self.name);
+                    warn!("{} <= Unexpected message!!!", self.worker.name());
                 }
             }
-            self.output.send(Message::Done(self.name.clone())).unwrap();
-            if done { break }
         }
     }
 }
