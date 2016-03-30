@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cargo doc 
+cargo doc
+PROJECT=$(basename $(pwd))
 
 rm -r -f .gh-pages
 mkdir .gh-pages
@@ -14,9 +15,10 @@ cat <<EOF > index.html
 <meta http-equiv="refresh" content="0; ./lib/">
 EOF
 
+
 git add -f --all .
 git commit -m "Added docs"
-git remote add origin git@github.com:seb-odessa/$(basename $(pwd)).git
+git remote add origin git@github.com:seb-odessa/${PROJECT}.git
 git push -f origin master:gh-pages
 
 cd ..
