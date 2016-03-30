@@ -32,7 +32,7 @@ impl<T: HasName + HasTarget, W: HasName + Processor> WorkerHandler<T, W> {
             gate: tx,
             input: rx,
             output: output,
-            received : 0,
+            received: 0,
             processed: 0,
             worker: worker,
         }
@@ -58,9 +58,7 @@ impl<T: HasName + HasTarget, W: HasName + Processor> WorkerHandler<T, W> {
                 }
                 Message::Event(request) => {
                     let name = request.name();
-                    trace!("{} <= Message::Request({})",
-                           self.worker.name(),
-                           name);
+                    trace!("{} <= Message::Request({})", self.worker.name(), name);
 
                     let succ = self.say(Message::Busy(name.clone())) &&
                                self.say(Message::Event(self.worker.process(request))) &&
@@ -93,24 +91,28 @@ mod tests {
 
     #[derive(Debug, PartialEq)]
     struct EventFake;
-    impl HasName for EventFake
-    {
-        fn name(&self) -> String {String::from("EventFake")}
+    impl HasName for EventFake {
+        fn name(&self) -> String {
+            String::from("EventFake")
+        }
     }
-    impl HasTarget for EventFake
-    {
-        fn target(&self) -> String {String::from("EventFakeTarget")}
+    impl HasTarget for EventFake {
+        fn target(&self) -> String {
+            String::from("EventFakeTarget")
+        }
     }
 
     #[derive(Debug, PartialEq)]
     struct TaskFake;
-    impl HasName for TaskFake
-    {
-        fn name(&self) -> String {String::from("EventFake")}
+    impl HasName for TaskFake {
+        fn name(&self) -> String {
+            String::from("EventFake")
+        }
     }
-    impl Processor for TaskFake
-    {
-        fn process<T>(&self, event : T) -> T { event }
+    impl Processor for TaskFake {
+        fn process<T>(&self, event: T) -> T {
+            event
+        }
     }
 
     // impl PartialEq <EventFake> for Message<EventFake> {
@@ -126,7 +128,7 @@ mod tests {
     #[test]
     fn message_quit() {
         let task = TaskFake;
-        let (pipe, _) : (Sender<Message<EventFake>>, Receiver<Message<EventFake>>) = mpsc::channel();
+        let (pipe, _): (Sender<Message<EventFake>>, Receiver<Message<EventFake>>) = mpsc::channel();
         let mut handler = WorkerHandler::new(task, pipe.clone());
         let gate = handler.gate();
         let thread = thread::spawn(move || handler.run());
@@ -138,7 +140,8 @@ mod tests {
     fn message_event() {
         let task = TaskFake;
         let taskname = task.name();
-        let (pipe, results) : (Sender<Message<EventFake>>, Receiver<Message<EventFake>>) = mpsc::channel();
+        let (pipe, results): (Sender<Message<EventFake>>, Receiver<Message<EventFake>>) =
+            mpsc::channel();
         let mut handler = WorkerHandler::new(task, pipe.clone());
         let gate = handler.gate();
         let thread = thread::spawn(move || handler.run());
