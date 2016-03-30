@@ -1,5 +1,5 @@
 //! Library description
-
+#![deny(missing_docs, unsafe_code)]
 pub mod types;
 pub mod worker;
 // pub mod supervisor;

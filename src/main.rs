@@ -10,7 +10,7 @@
 //
 // extern crate rand;
 // extern crate lib;
-// use lib::types::{Message, Task};
+// use lib::types::{Message};
 // use lib::supervisor::Supervisor;
 //
 // struct Work {
