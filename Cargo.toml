@@ -1,13 +1,19 @@
 [package]
-name = "lib-servers"
-version = "0.0.1"
+name = "workers-pool"
+version = "0.1.1"
 authors = ["seb-odessa <seb@ukr.net>"]
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/seb-odessa/workers-pool.git"
+homepage = "https://github.com/seb-odessa/workers-pool.git"
+readme = "README.md"
+documentation = "https://seb-odessa.github.io/workers-pool/lib/"
+
+description = "Simple Rust playground"
 
 [dependencies]
-rand = "*"
-log = "*"
-env_logger = "*"
+rand = "0.3.14"
+log = "0.3.5"
+env_logger = "0.3.2"
 
 [lib]
 name = "lib"

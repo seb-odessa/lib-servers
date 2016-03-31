@@ -1,4 +1,4 @@
-# lib-servers
+# workers-pool
 
 ## License
 
