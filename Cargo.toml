@@ -2,6 +2,7 @@
 name = "lib-servers"
 version = "0.0.1"
 authors = ["seb-odessa <seb@ukr.net>"]
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 rand = "*"
